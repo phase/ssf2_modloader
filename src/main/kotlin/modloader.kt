@@ -1,14 +1,78 @@
-import java.io.File
-import java.util.zip.InflaterInputStream
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.nio.ByteBuffer
 import java.util.zip.DeflaterInputStream
+import java.util.zip.InflaterInputStream
+import javax.swing.*
 
 fun main(args: Array<String>) {
     println("ssf2 modloader for SSF2 v1.1.0.1 beta\n\tby phase\n")
 
     if (args.isEmpty()) {
-        println("java -jar modloader.jar [compress|decompress]")
+//        println("java -jar modloader.jar [compress|decompress]")
+        try {
+            UIManager.setLookAndFeel("com.jtattoo.plaf.hifi.HiFiLookAndFeel")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // gui
+        val frame = JFrame("phase's ssf2 modloader")
+        val container = JPanel()
+
+        val instructions = JTextPane()
+        instructions.text = "phase's ssf2 modloader\n" +
+                "\nmake sure this jar file is placed within" +
+                "\nthe same directory as your SSF2 installation." +
+                "\n\nSSF2/" +
+                "\n  - data/" +
+                "\n  - SSF2.swf" +
+                "\n  - SSF2.exe" +
+                "\n  - modloader.jar" +
+                "\n\nDecompress will convert all of the" +
+                "\n  `ssf` files in data/ to `swf`" +
+                "\n\nCompress will convert all of the" +
+                "\n  `swf` files in data/ to `ssf`"
+        instructions.isEditable = false
+
+        val decompressButton = JButton("Decompress")
+        decompressButton.addActionListener {
+            val dataFolder = File("data")
+            if (dataFolder.exists() && dataFolder.isDirectory) {
+                dataFolder.listFiles().forEach {
+                    if (it.isFile && it.extension == "ssf") {
+                        decompress(it)
+                    }
+                }
+            }
+            JOptionPane.showMessageDialog(container, "Decompression Complete", "phase's ssf2 modloader", JOptionPane.INFORMATION_MESSAGE)
+        }
+
+        val compressButton = JButton("Compress")
+        compressButton.addActionListener {
+            val dataFolder = File("data")
+            if (dataFolder.exists() && dataFolder.isDirectory) {
+                dataFolder.listFiles().forEach {
+                    if (it.isFile && it.extension == "swf") {
+                        compress(it)
+                    }
+                }
+            }
+            JOptionPane.showMessageDialog(container, "Compression Complete", "phase's ssf2 modloader", JOptionPane.INFORMATION_MESSAGE)
+        }
+
+        container.add(instructions)
+        container.add(decompressButton)
+        container.add(compressButton)
+
+        container.layout = BoxLayout(container, BoxLayout.Y_AXIS)
+        frame.add(container)
+        frame.pack()
+        frame.setLocationRelativeTo(null)
+        frame.isResizable = false
+        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+        frame.isVisible = true
+
     } else if (args[0] == "decompress" || args[0] == "d") {
         val dataFolder = File("data")
         if (dataFolder.exists()) {
@@ -58,7 +122,7 @@ fun decompress(file: File) {
     }
 
     if (offset == -1) {
-        println("Couldn't find FWS header in decompressed data file")
+        println("ERROR(${file.name}): Couldn't find FWS header in decompressed data file")
         return
     }
 
@@ -86,7 +150,7 @@ fun compress(file: File) {
 
     val datFile = file.withExtension("ssf")
     if (datFile.exists()) {
-        datFile.renameTo(datFile.withExtension("ssf.bak"))
+//        datFile.renameTo(datFile.withExtension("ssf.bak"))
         file.withExtension("ssf").writeBytes(bytes)
     }
 }
