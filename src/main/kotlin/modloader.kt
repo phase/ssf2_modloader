@@ -1,6 +1,7 @@
 import java.io.File
 import java.util.zip.InflaterInputStream
 import java.io.ByteArrayInputStream
+import java.nio.ByteBuffer
 import java.util.zip.DeflaterInputStream
 
 fun main(args: Array<String>) {
@@ -66,18 +67,16 @@ fun decompress(file: File) {
     val swf = datDecompressed.toList().subList(offset, datDecompressed.size)
     println("${file.name} SWF size ${swf.size}")
 
-    file.withExtension("header").writeBytes(header.toByteArray())
     file.withExtension("swf").writeBytes(swf.toByteArray())
 }
 
 fun compress(file: File) {
     val swf = file.readBytes()
     println("${file.name} SWF size ${swf.size}")
-    val header = file.withExtension("header").readBytes()
-    println("${file.name} Header size ${header.size}")
-    val combined = header.toMutableList()
-    println("${file.name} Combined size ${combined.size}")
+    val combined = ByteBuffer.allocate(4).putInt(swf.size).array().toMutableList()
+    combined.addAll(listOf(0, 0, 0, 0))
     combined.addAll(swf.toList())
+    println("${file.name} Combined size ${combined.size}")
 
     val stream = ByteArrayInputStream(combined.toByteArray())
     val zlibStream = DeflaterInputStream(stream)
